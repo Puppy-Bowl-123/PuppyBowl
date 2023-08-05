@@ -117,7 +117,17 @@ const renderAllPlayers = async (playerList) => {
         detailsButton.addEventListener("click", async (event) => {
         const playerId = event.target.dataset.id;
         try {
-           
+            const playerDetails = await fetchSinglePlayer(playerId);
+            console.log('Player details:', playerDetails);
+            const playerDetailsPage = window.open("", "_blank");
+            playerDetailsPage.document.write(`
+                <h1>${player.name}</h1>
+                <p>ID: ${player.id}</p>
+                <p>Breed: ${player.breed}</p>
+                <p>Status: ${player.status}</p>
+                <img src="${player.imageUrl}" alt="img broken"/>
+                <button onclick="window.close()">Close</button>
+            `);
         } catch (err) {
             console.error('Error fetching player details:', err);
         }
@@ -125,7 +135,12 @@ const renderAllPlayers = async (playerList) => {
 
         // Delete button
         const deleteButton = playerElement.querySelector(".delete-button");
-        
+        deleteButton.addEventListener("click", async (event) => {
+            const playerId = event.target.dataset.id;
+            await removePlayer(playerId);
+            await init();
+        })
+        });
         
     } catch (err) {
         console.error('Uh oh, trouble rendering players!', err);
@@ -138,15 +153,49 @@ const renderAllPlayers = async (playerList) => {
  * fetches all players from the database, and renders them to the DOM.
  */
 const renderNewPlayerForm = () => {
+    try {
+        newPlayerFormContainer.innerHTML = `
+            <h2>Add New Player</h2>
+            <form id="new-player-form">
+                <label for="name">Name:</label>
+                <input type="text" id="name" required><br>
+                <label for="breed">Breed:</label>
+                <input type="text" id="breed" required><br>
+                <label for="status">Status:</label>
+                <input type="text" id="status" required><br>
+                <label for="imageUrl">Image URL:</label>
+                <input type="text" id="imageUrl" required><br>
+                <button type="submit">Add Player</button>
+            </form>
+        `;
+
+        const newPlayerForm = document.getElementById('new-player-form');
+
+        newPlayerForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const name = event.target.elements.name.value;
+            const breed = event.target.elements.breed.value;
+            const status = event.target.elements.status.value;
+            const imageUrl = event.target.elements.imageUrl.value;
+
+            const playerObj = { name, breed, status, imageUrl };
+
             try {
-              
-                
-                try {
-                   
-                } catch (err) {
-                console.error('Uh oh, trouble rendering the new player form!', err);
-                }
-        }
+                const newPlayer = await addNewPlayer(playerObj);
+                console.log('New player added:', newPlayer);
+
+                // Refresh the player list after adding the new player
+                await init();
+            } catch (err) {
+                console.error('Error adding new player:', err);
+            }
+        });
+    } catch (err) {
+        console.error('Uh oh, trouble rendering the new player form!', err);
+    }
+}
+
 
 
 const init = async () => {
